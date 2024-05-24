@@ -4,6 +4,7 @@ import math
 from pygame.time import get_ticks
 from PIL import Image, ImageFilter
 import random
+import time
 
 # Initialisation de Pygame
 pygame.init()
@@ -21,6 +22,7 @@ ROTATION_VEL = 2.5
 TURRET_ROTATION_VEL = 2
 BULLET_VEL = 8
 FIRE_DELAY = 3000  # 3 secondes
+VIE = 3
 
 # Configuration des touches pour chaque joueur
 Z_P1 = pygame.K_z
@@ -126,8 +128,11 @@ class Tank:
         self.height = height
         self.color = color
         self.angle = angle
+        self.vie = VIE  # Initialisation de la vie
         self.turret = Turret(x, y, angle, turret_image_path)
         self.image = pygame.image.load(base_image_path).convert_alpha()
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
+        self.original_image = self.image.copy()
         self.rect = self.image.get_rect(center=(x, y))
         self.last_fire_time = 0
         self.avancer = avancer
@@ -136,8 +141,21 @@ class Tank:
         self.gauche = gauche
         self.aiguille = aiguille
         self.c_aiguille = c_aiguille
+        self.damage_animation = False
+        self.damage_animation_time = 0
         
     def draw(self, window):
+        if self.damage_animation:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.damage_animation_time < 300:  # Animation de 300 ms
+                scale_factor = 1.1  # Facteur de redimensionnement
+                self.image = pygame.transform.scale(self.original_image, (int(self.width * scale_factor), int(self.height * scale_factor)))
+            else:
+                self.damage_animation = False
+                self.image = self.original_image
+        else:
+            self.image = self.original_image
+        
         rotated_image = pygame.transform.rotate(self.image, self.angle)
         new_rect = rotated_image.get_rect(center=self.rect.center)
         window.blit(rotated_image, new_rect.topleft)
@@ -168,22 +186,23 @@ class Tank:
         self.turret.rect.center = (self.x, self.y)
         
     def collision_realiste(self, new_x, new_y):
-    # Vérifie si le nouveau déplacement dépasse les bords de l'écran
-    #je tiens a préciser que ca ne vient pas de moi et que je ne comprend pas trop ce bout de code
+        # Vérifie si le nouveau déplacement dépasse les bords de l'écran
+        # Gestion de la collision horizontale
         if new_x < 0:
-            self.x = 0
+            self.x = 0  # Empêche de dépasser le bord gauche
         elif new_x > WIDTH - self.width:
-            self.x = WIDTH - self.width
+            self.x = WIDTH - self.width  # Empêche de dépasser le bord droit
         else:
-            self.x = new_x
-        
-        if new_y < 0:
-            self.y = 0
-        elif new_y > HEIGHT - self.height:
-            self.y = HEIGHT - self.height
-        else:
-            self.y = new_y
+            self.x = new_x  # Mise à jour des coordonnées x
 
+        # Gestion de la collision verticale
+        if new_y < 0:
+            self.y = 0  # Empêche de dépasser le bord supérieur
+        elif new_y > HEIGHT - self.height:
+            self.y = HEIGHT - self.height  # Empêche de dépasser le bord inférieur
+        else:
+            self.y = new_y  # Mise à jour des coordonnées y
+        
     def fire(self):
         current_time = get_ticks()
         if current_time - self.last_fire_time >= FIRE_DELAY:
@@ -199,22 +218,41 @@ class Tank:
         current_time = get_ticks()
         time_since_last_fire = current_time - self.last_fire_time
         if time_since_last_fire >= FIRE_DELAY:
-            return "Ready to fire"
+            return "Prêt à tirer"
         else:
             remaining_time = (FIRE_DELAY - time_since_last_fire) / 1000
-            return f"Reloading: {remaining_time:.1f}s"
+            return f"chargement : {remaining_time:.1f}s"
+    
+    def hit(self, bullets):
+        """
+        Vérifie si le tank est touché par une balle et réduit sa vie en conséquence.
+        """
+        for bullet in bullets: #on faut ca car j'ai une liste de balle
+            if self.rect.colliderect(bullet.rect):
+                bullets.remove(bullet)
+                self.vie -= 1
+                self.damage_animation = True
+                self.damage_animation_time = pygame.time.get_ticks()
+                return True
+        return False
         
 class Boite:
     def __init__(self, size):
         self.size = size
-        self.x = random.randint(200, WIDTH - 200)
-        self.y = random.randint(200, HEIGHT - 200)
-        self.image = pygame.image.load('Jeu de tank/assets/Items/Boxes/Box2/Idle.png').convert_alpha()
+        self.image = pygame.image.load('Jeu de tank/assets/Items/Boxes/Box'+str(random.randint(1,3))+'/Idle.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (size, size))
-        self.rect = self.image.get_rect(center=(size, size))
+        self.rect = self.image.get_rect()  # Create a separate rect for collision detection
+        print(f"{self.rect}")
+        self.rect.topleft = (random.randint(200, WIDTH - 200 - self.rect.width), random.randint(200, HEIGHT - 200 - self.rect.height))
+        self.x = self.rect.x
+        self.y = self.rect.y
 
     def draw(self, window):
         window.blit(self.image, self.rect.topleft)
+
+    def update_rect(self):
+        self.rect.x = self.x
+        self.rect.y = self.y
 
     def check_collision(self, bullets, tanks):
         for bullet in bullets:
@@ -242,13 +280,17 @@ class Boite:
                 # Ajuster la position du rectangle du tank
                 tank.rect.center = (tank.x, tank.y)
                 tank.turret.rect.center = (tank.x, tank.y)
+    
 
 def main(window, clock, fps_surface):
+    window.fill(BLACK)
+    
     tank_P1 = Tank(100, HEIGHT // 2, 120, 80, GREEN, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P1.png', 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P1.png', Z_P1, S_P1, D_P1, Q_P1, E_P1, A_P1, 0)
     tank_P2 = Tank(WIDTH - 100, HEIGHT // 2, 120, 80, GREEN, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P2.png', 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P2.png', Z_P2, S_P2, D_P2, Q_P2, E_P2, A_P2, 180)
     bullets_P1 = []
     bullets_P2 = []
-    box = Boite(200)  # Création de la boîte
+    
+    box = Boite(140)  # Création de la boîte
 
     run = True
     while run:
@@ -281,8 +323,20 @@ def main(window, clock, fps_surface):
                 bullets_P2.remove(bullet_P2)
 
         # Gestion des collisions avec la boîte
+        box.update_rect()
         box.check_collision(bullets_P1, [tank_P1, tank_P2])
         box.check_collision(bullets_P2, [tank_P1, tank_P2])
+        
+        # Vérifier les collisions entre les balles et les tanks
+        if tank_P1.hit(bullets_P2) or tank_P2.hit(bullets_P1):
+            print("Tu t'es fait touché")
+            
+        if tank_P1.vie == 0 or tank_P2.vie == 0:
+            print("La partie est finie !")
+            window.fill(WHITE)
+            pygame.display.update()
+            pygame.time.wait(2000)
+            run = False
 
         window.fill(BLACK)
         tank_P1.draw(window)

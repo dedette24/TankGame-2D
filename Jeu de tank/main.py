@@ -21,7 +21,7 @@ TANK_VEL = 4
 ROTATION_VEL = 2.5
 TURRET_ROTATION_VEL = 2
 BULLET_VEL = 8
-FIRE_DELAY = 3000  # 3 secondes
+FIRE_DELAY = 1000  # 3 secondes
 VIE = 3
 
 # Configuration des touches pour chaque joueur
@@ -334,8 +334,20 @@ def main(window, clock, fps_surface):
         if tank_P1.vie == 0 or tank_P2.vie == 0:
             print("La partie est finie !")
             window.fill(WHITE)
+            affiche_fin = "FIN DE LA PARTIE BANDE DE NEUILLEEEE !!"
+            fin = status_font.render(affiche_fin, True, BLACK)
+            
+            # Obtenir la taille du texte
+            taille_texte = fin.get_rect()
+            
+            # Calculer la position x et y pour centrer le texte
+            text_x = (WIDTH - taille_texte.width) // 2
+            text_y = (HEIGHT - taille_texte.height) // 2
+            
+            # Blitter le texte au centre de l'écran
+            window.blit(fin, (text_x, text_y))
             pygame.display.update()
-            pygame.time.wait(2000)
+            pygame.time.wait(3000)
             run = False
 
         window.fill(BLACK)

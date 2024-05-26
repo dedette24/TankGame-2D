@@ -21,7 +21,7 @@ TANK_VEL = 4
 ROTATION_VEL = 2.5
 TURRET_ROTATION_VEL = 2
 BULLET_VEL = 8
-FIRE_DELAY = 1000  # 3 secondes
+FIRE_DELAY = 1000  # 1 seconde
 VIE = 3
 
 # Configuration des touches pour chaque joueur
@@ -83,6 +83,46 @@ apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Base.png', color
 apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Touret.png', color_P1, 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P1.png')
 apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Touret.png', color_P2, 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P2.png')
 
+# Boutons
+bouton_debut = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 - 100, 300, 100)
+quitter_bouton = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 + 50, 300, 100)
+parametre = pygame.Rect((11), (11), 100 , 70)
+
+# Fonts
+font = pygame.font.Font(None, 74)
+button_font = pygame.font.Font(None, 50)
+parametre_font = pygame.font.Font(None, 20)
+
+def decompte(window, duration=3):
+    for i in range(duration, 0, -1):
+        window.fill(BLACK)
+        countdown_text = font.render(str(i), True, WHITE)
+        window.blit(countdown_text, (WIDTH // 2 - countdown_text.get_width() // 2, HEIGHT // 2 - countdown_text.get_height() // 2))
+        pygame.display.update()
+        pygame.time.wait(1000)  # Attend 1 seconde
+
+def menu_principal():
+    window.fill(WHITE)
+    
+    # Titre
+    title_text = font.render("Menu d'accueil", True, BLACK)
+    window.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, HEIGHT // 10))
+    
+    # Boutons
+    pygame.draw.rect(window, GREEN, bouton_debut)
+    pygame.draw.rect(window, GREEN, quitter_bouton)
+    pygame.draw.rect(window, WHITE, parametre)
+    
+    start = button_font.render("Commencer", True, BLACK)
+    quitter = button_font.render("Quitter", True, BLACK)
+    param = parametre_font.render("Parametre", True, BLACK)
+    
+    
+    window.blit(start, (bouton_debut.x + bouton_debut.width // 2 - start.get_width() // 2, bouton_debut.y + bouton_debut.height // 2 - start.get_height() // 2))
+    window.blit(quitter, (quitter_bouton.x + quitter_bouton.width // 2 - quitter.get_width() // 2, quitter_bouton.y + quitter_bouton.height // 2 - quitter.get_height() // 2))
+    window.blit(param, (parametre.x + parametre.width // 2 - param.get_width() // 2, parametre.y + parametre.height // 2 - param.get_height() // 2))
+    
+    pygame.display.update()
 
 class Turret:
     def __init__(self, x, y, angle, image_path):
@@ -222,6 +262,11 @@ class Tank:
         else:
             remaining_time = (FIRE_DELAY - time_since_last_fire) / 1000
             return f"chargement : {remaining_time:.1f}s"
+        
+    def point_vie(self, numero):
+        # Affichage de la vie 
+        return f"vie du P{numero} : {self.vie}"
+
     
     def hit(self, bullets):
         """
@@ -280,7 +325,6 @@ class Boite:
                 # Ajuster la position du rectangle du tank
                 tank.rect.center = (tank.x, tank.y)
                 tank.turret.rect.center = (tank.x, tank.y)
-    
 
 def main(window, clock, fps_surface):
     window.fill(BLACK)
@@ -327,27 +371,29 @@ def main(window, clock, fps_surface):
         box.check_collision(bullets_P1, [tank_P1, tank_P2])
         box.check_collision(bullets_P2, [tank_P1, tank_P2])
         
+        #afficher la vie
         # Vérifier les collisions entre les balles et les tanks
         if tank_P1.hit(bullets_P2) or tank_P2.hit(bullets_P1):
             print("Tu t'es fait touché")
             
         if tank_P1.vie == 0 or tank_P2.vie == 0:
+            if tank_P1.vie == 0:
+                gagnant = "JOUEUR 2"
+            else:
+                gagnant = "JOUEUR 1"
             print("La partie est finie !")
             window.fill(WHITE)
-            affiche_fin = "FIN DE LA PARTIE BANDE DE NEUILLEEEE !!"
+            affiche_fin = f"FIN DE LA PARTIE ! LE GAGNANT EST LE {gagnant} !"
             fin = status_font.render(affiche_fin, True, BLACK)
-            
             # Obtenir la taille du texte
             taille_texte = fin.get_rect()
-            
             # Calculer la position x et y pour centrer le texte
             text_x = (WIDTH - taille_texte.width) // 2
             text_y = (HEIGHT - taille_texte.height) // 2
-            
             # Blitter le texte au centre de l'écran
             window.blit(fin, (text_x, text_y))
             pygame.display.update()
-            pygame.time.wait(3000)
+            pygame.time.wait(5000)
             run = False
 
         window.fill(BLACK)
@@ -364,18 +410,45 @@ def main(window, clock, fps_surface):
 
         reload_status_P1 = tank_P1.get_reload_status()
         reload_surface_P1 = status_font.render(reload_status_P1, True, WHITE)
-        window.blit(reload_surface_P1, (WIDTH - reload_surface_P1.get_width() - 10, 10))
+        window.blit(reload_surface_P1, (10, HEIGHT - reload_surface_P1.get_height() - 40))
 
         reload_status_P2 = tank_P2.get_reload_status()
         reload_surface_P2 = status_font.render(reload_status_P2, True, WHITE)
-        window.blit(reload_surface_P2, (WIDTH - reload_surface_P2.get_width() - 10, 40))
+        window.blit(reload_surface_P2, (WIDTH - reload_surface_P2.get_width() - 10, HEIGHT - reload_surface_P2.get_height() - 40))
+        
+        info_vie_P1 = tank_P1.point_vie(1)
+        affiche_vie_P1 = status_font.render(info_vie_P1, True, WHITE)
+        window.blit(affiche_vie_P1, (10, HEIGHT - affiche_vie_P1.get_height() - 10))
+
+        info_vie_P2 = tank_P2.point_vie(2)
+        affiche_vie_P2 = status_font.render(info_vie_P2, True, WHITE)
+        window.blit(affiche_vie_P2, (WIDTH - affiche_vie_P2.get_width() - 10, HEIGHT - affiche_vie_P2.get_height() - 10))
+        
 
         pygame.display.update()
 
     pygame.quit()
-    sys.exit()
 
 if __name__ == "__main__":
     clock = pygame.time.Clock()
     fps_surface = fps_font.render('0', True, WHITE)
-    main(window, clock, fps_surface)
+    # Boucle du menu d'accueil
+    menu = True
+    while menu:
+        menu_principal()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if bouton_debut.collidepoint(event.pos):
+                    menu = False
+                    #decompte(window)
+                    main(window, clock, fps_surface)
+                elif quitter_bouton.collidepoint(event.pos):
+                    pygame.quit()
+                    sys.exit()
+                elif parametre.collidepoint(event.pos):
+                    ...
+pygame.quit()

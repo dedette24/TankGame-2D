@@ -93,7 +93,7 @@ class Tourelle(pygame.sprite.Sprite):
 class Base(pygame.sprite.Sprite):
     def __init__(self, x, y, orientation):
         pygame.sprite.Sprite.__init__(self)
-        self.original_image = pygame.image.load('Jeu de tank/assets/MainCharacters/Tank/test.png').convert_alpha()
+        self.original_image = pygame.image.load('Jeu de tank/assets/MainCharacters/Tank/tank_base_P1.png').convert_alpha()
         self.image = self.original_image
         self.rect = self.image.get_rect(center=(x, y))
         self.mask = pygame.mask.from_surface(self.image)

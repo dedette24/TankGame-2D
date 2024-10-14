@@ -2,7 +2,6 @@ import pygame
 import sys
 import math
 from pygame.time import get_ticks
-from PIL import Image, ImageFilter
 import random
 import time
 
@@ -49,40 +48,8 @@ fps_font = pygame.font.SysFont(None, 64)
 status_font = pygame.font.SysFont(None, 32)
 fps_surface = fps_font.render('0', True, WHITE)
 
-def apply_color_filter(image_path, color, save_path):
-    """
-    Applique une teinte de couleur à une image et enregistre le résultat en conservant la transparence.
-
-    Args:
-    image_path (str): Chemin de l'image source.
-    color (tuple): Couleur à appliquer (R, G, B).
-    save_path (str): Chemin pour enregistrer l'image filtrée.
-    """
-    image = Image.open(image_path).convert("RGBA")
-    r, g, b, a = image.split()
-    
-    # Créer une nouvelle image remplie avec la couleur donnée
-    color_image = Image.new("RGBA", image.size, color + (0,))
-    cr, cg, cb, _ = color_image.split()
-    
-    # Fusionner les canaux de couleur de l'image d'origine et de l'image colorée
-    r = Image.blend(r, cr, 0.5)
-    g = Image.blend(g, cg, 0.5)
-    b = Image.blend(b, cb, 0.5)
-    
-    # Réassembler les canaux avec la transparence d'origine
-    blended_image = Image.merge("RGBA", (r, g, b, a))
-    blended_image.save(save_path)
-
-# Générer des couleurs aléatoires pour chaque joueur
 color_P1 = tuple(random.randint(0, 255) for i in range(3))
 color_P2 = tuple(random.randint(0, 255) for i in range(3))
-
-# Appliquer les filtres de couleur aux images de la base et de la tourelle des chars
-apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Base.png', color_P1, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P1.png')
-apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Base.png', color_P2, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P2.png')
-apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Touret.png', color_P1, 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P1.png')
-apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Touret.png', color_P2, 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P2.png')
 
 # Boutons
 bouton_debut = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 - 100, 300, 100)
@@ -257,12 +224,6 @@ class Tank:
         for bullet in self.bullets:
             bullet.draw(window)
 
-        """"# Afficher la vie du tank
-        vie_text = status_font.render(f"Vie: {self.vie}", True, WHITE)
-        if self.color == color_P1:
-            window.blit(vie_text, (10, 10))
-        else:
-            window.blit(vie_text, (WIDTH - vie_text.get_width() - 10, 10))"""
 
     def handle_bullets(self, tanks, delta_time, box):
         for bullet in self.bullets:
@@ -293,18 +254,18 @@ class Tank:
             remaining_time = (FIRE_DELAY - time_since_last_fire) / 1000
             return f"chargement : {remaining_time:.1f}s"
 
-    def move(self, delta_time):
+    def move(self, delta_time, box):
         keys = pygame.key.get_pressed()
         if keys[self.keys['avancer']]:
             radians = math.radians(self.angle)
             new_x = self.x + TANK_VEL * math.cos(radians)
             new_y = self.y - TANK_VEL * math.sin(radians)
-            self.collision_realiste(new_x, new_y)
+            self.collision_realiste(new_x, new_y, box)
         if keys[self.keys['reculer']]:
             radians = math.radians(self.angle)
             new_x = self.x - TANK_VEL * math.cos(radians)
             new_y = self.y + TANK_VEL * math.sin(radians)
-            self.collision_realiste(new_x, new_y)
+            self.collision_realiste(new_x, new_y, box)
         if keys[self.keys['gauche']]:
             self.angle += ROTATION_VEL 
             self.turret.rotate(ROTATION_VEL)
@@ -328,7 +289,7 @@ class Tank:
             self.bullets.append(new_bullet)
             self.last_shot_time = current_time
             
-    def collision_realiste(self, new_x, new_y):
+    def collision_realiste(self, new_x, new_y, box):
         # Gestion de la collision horizontale
         if new_x - self.width // 2 < 0:
             self.x = self.width // 2  # Empêche de dépasser le bord gauche
@@ -344,6 +305,28 @@ class Tank:
             self.y = HEIGHT - self.height // 2  # Empêche de dépasser le bord inférieur
         else:
             self.y = new_y  # Mise à jour des coordonnées y
+
+        # Gestion de la collision avec la boîte
+        if self.rect.colliderect(box.rect):
+            # Vecteur de la collision
+            dx = min(abs(self.rect.left - box.rect.right), abs(self.rect.right - box.rect.left))
+            dy = min(abs(self.rect.bottom - box.rect.top), abs(self.rect.top - box.rect.bottom))
+
+            # Déplacer le tank dans la direction opposée à la collision
+            if dx < dy:
+                if self.x < box.x:
+                    self.x -= dx
+                else:
+                    self.x += dx
+            else:
+                if self.y < box.y:
+                    self.y -= dy
+                else:
+                    self.y += dy
+
+            # Ajuster la position du rectangle du tank
+            self.rect.center = (self.x, self.y)
+            self.turret.rect.center = (self.x, self.y)
 
         self.rect.center = (self.x, self.y)
         self.turret.rect.center = (self.x, self.y)
@@ -420,7 +403,7 @@ def main():
                 delta_time = clock.get_time() / 15.0  # Temps écoulé en secondes
 
                 for tank in tanks:
-                    tank.move(delta_time)
+                    tank.move(delta_time, box)
                     if not tank.handle_bullets(tanks, delta_time, box):
                         running = False  # Si un tank meurt, arrêter la partie
                         pygame.quit()

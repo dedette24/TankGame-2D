@@ -13,7 +13,7 @@ BLUE = (0, 190, 255)
 RED = (255, 0, 0)
 GRAY = (111, 111, 111)
 
-WIDTH, HEIGHT = 1200, 900
+WIDTH, HEIGHT = 960, 540
 FPS = 60
 TANK_VEL = 4
 ROTATION_VEL = 2.5
@@ -89,6 +89,26 @@ class Tourelle(pygame.sprite.Sprite):
         
     def rotate(self, angle):
         self.angle = (self.angle + angle) % 360  # Rotation indépendante
+        
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, angle, owner):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((5, 5), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, WHITE, (2, 2), 2)
+        self.rect = self.image.get_rect(center=(x, y))
+        self.angle = angle
+        self.speed = BULLET_VEL
+        self.owner = owner  # Référence au tank qui a tiré la bullet
+
+    def update(self):
+        radians = math.radians(self.angle)
+        dx = self.speed * math.cos(radians)
+        dy = -self.speed * math.sin(radians)
+        self.rect.x += dx
+        self.rect.y += dy
+        # Remove bullet if it goes off-screen
+        if not (0 <= self.rect.x <= WIDTH and 0 <= self.rect.y <= HEIGHT):
+            self.kill()
 
 class Base(pygame.sprite.Sprite):
     def __init__(self, x, y, orientation):
@@ -164,6 +184,19 @@ class Base(pygame.sprite.Sprite):
             new_y = HEIGHT - TANK_HEIGHT
 
         return new_x, new_y
+    
+    def fire(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_shot_time >= FIRE_DELAY:
+            # Calculer la position du bout de la tourelle
+            radians = math.radians(self.tourelle.angle)
+            barrel_length = 60  # Longueur de la tourelle
+            bullet_x = self.x + barrel_length * math.cos(radians)
+            bullet_y = self.y - barrel_length * math.sin(radians)
+            # Créer et ajouter la bullet
+            bullet = Bullet(bullet_x, bullet_y, self.tourelle.angle, self)
+            bullets_group.add(bullet)
+            self.last_shot_time = now
 
 class Curseur(pygame.sprite.Sprite):
     def __init__(self):
@@ -221,13 +254,13 @@ base1 = Base(100, 100, 0)
 curseur = Curseur()
 box = Box(500, 500, 200, 200)
 box2 = Box(300, 300, 200, 20)
-
 base2 = Base(1100, 800, 180)
 
 # Création des groupes
 base_group = pygame.sprite.Group()
 curseur_group = pygame.sprite.Group()
 object_group = pygame.sprite.Group()
+bullets_group = pygame.sprite.Group()
 
 # Ajout des sprites aux groupes
 base_group.add(base1)
@@ -266,6 +299,27 @@ def main(window, clock):
         base1.move(keys, object_group, TOUCHE1)
         base2.move(keys, object_group, TOUCHE2)
         
+        # Mise à jour des bullets
+        bullets_group.update()
+
+        # Vérification des collisions entre bullets et tanks
+        for bullet in bullets_group:
+            # Collision avec les tanks
+            for tank in base_group:
+                if bullet.owner != tank and bullet.rect.colliderect(tank.rect):
+                    tank.health -= 1
+                    if tank.health <= 0:
+                        tank.kill()
+                        base_group.remove(tank)
+                    bullet.kill()
+                    break  # Sortir de la boucle des tanks
+
+            # Collision avec les obstacles
+            for box in object_group:
+                if bullet.rect.colliderect(box.rect):
+                    bullet.kill()
+                    break  # Sortir de la boucle des obstacles
+        
         # Mise à jour des groupes
         curseur_group.update(col_curseur)
         object_group.update(col_box)
@@ -273,6 +327,7 @@ def main(window, clock):
         # Dessin des groupes sur la fenêtre
         base1.draw(window)
         base2.draw(window)
+        bullets_group.draw(window)
         curseur_group.draw(window)
         object_group.draw(window)
         

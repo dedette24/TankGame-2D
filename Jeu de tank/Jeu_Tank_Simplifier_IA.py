@@ -232,7 +232,7 @@ class Tank:
         self.base_image = pygame.image.load(base_image_path).convert_alpha()
         self.base_image = pygame.transform.scale(self.base_image, (width, height))
         self.original_base_image = self.base_image.copy()
-        self.rect = self.base_image.get_rect(center=(x, y))
+        self.rect = self.base_image.get_rect(center=(120, 90))
         self.last_shot_time = 0
         self.keys = {
             'avancer': avancer,
@@ -275,12 +275,14 @@ class Tank:
                         tank.vie -= 1
                         self.bullets.remove(bullet)
                         if tank.vie <= 0:
-                            tanks.remove(tank)
+                            return False  # Signaler la fin du jeu
                         break
-                    
+                        
                 for bullet in self.bullets:
                     if bullet.rect.colliderect(box.rect):
                         self.bullets.remove(bullet)
+        return True  # Continuer la partie
+
                     
     def get_reload_status(self):
         current_time = get_ticks()
@@ -419,7 +421,11 @@ def main():
 
                 for tank in tanks:
                     tank.move(delta_time)
-                    tank.handle_bullets(tanks, delta_time, box)
+                    if not tank.handle_bullets(tanks, delta_time, box):
+                        running = False  # Si un tank meurt, arrêter la partie
+                        pygame.quit()
+                        sys.exit()
+
                     draw_health_bar(window, tank.rect.centerx - 25, tank.rect.centery + 50, tank.vie, VIE)
                     tank.draw(window)
                     
@@ -455,3 +461,4 @@ def main():
         
 if __name__ == "__main__":
     main()
+

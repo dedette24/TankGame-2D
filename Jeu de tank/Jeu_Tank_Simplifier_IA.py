@@ -17,7 +17,7 @@ BLUE = (0, 190, 255)
 RED = (255, 0, 0)
 
 WIDTH, HEIGHT = 800, 600
-FPS = 60  # Fixer le FPS à 100
+FPS = 75  # Fixer le FPS à 100
 TANK_VEL = 4
 ROTATION_VEL = 2.5
 TURRET_ROTATION_VEL = 3
@@ -48,41 +48,6 @@ pygame.display.set_caption("Jeu De Tank")
 fps_font = pygame.font.SysFont(None, 64)
 status_font = pygame.font.SysFont(None, 32)
 fps_surface = fps_font.render('0', True, WHITE)
-
-def apply_color_filter(image_path, color, save_path):
-    """
-    Applique une teinte de couleur à une image et enregistre le résultat en conservant la transparence.
-
-    Args:
-    image_path (str): Chemin de l'image source.
-    color (tuple): Couleur à appliquer (R, G, B).
-    save_path (str): Chemin pour enregistrer l'image filtrée.
-    """
-    image = Image.open(image_path).convert("RGBA")
-    r, g, b, a = image.split()
-    
-    # Créer une nouvelle image remplie avec la couleur donnée
-    color_image = Image.new("RGBA", image.size, color + (0,))
-    cr, cg, cb, _ = color_image.split()
-    
-    # Fusionner les canaux de couleur de l'image d'origine et de l'image colorée
-    r = Image.blend(r, cr, 0.5)
-    g = Image.blend(g, cg, 0.5)
-    b = Image.blend(b, cb, 0.5)
-    
-    # Réassembler les canaux avec la transparence d'origine
-    blended_image = Image.merge("RGBA", (r, g, b, a))
-    blended_image.save(save_path)
-
-# Générer des couleurs aléatoires pour chaque joueur
-color_P1 = tuple(random.randint(0, 255) for i in range(3))
-color_P2 = tuple(random.randint(0, 255) for i in range(3))
-
-# Appliquer les filtres de couleur aux images de la base et de la tourelle des chars
-apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Base.png', color_P1, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P1.png')
-apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Base.png', color_P2, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P2.png')
-apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Touret.png', color_P1, 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P1.png')
-apply_color_filter('Jeu de tank/assets/MainCharacters/Tank/NoBG_Touret.png', color_P2, 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P2.png')
 
 # Boutons
 bouton_debut = pygame.Rect(WIDTH // 2 - 150, HEIGHT // 2 - 100, 300, 100)
@@ -219,13 +184,12 @@ class Bullet:
         window.blit(self.image, self.rect.topleft)
 
 class Tank:
-    def __init__(self, x, y, width, height, color, base_image_path, turret_image_path, avancer, reculer, droit, gauche, aiguille, c_aiguille, angle):
+    def __init__(self, x, y, width, height, base_image_path, turret_image_path, avancer, reculer, droit, gauche, aiguille, c_aiguille, angle):
         super().__init__()
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.color = color
         self.angle = angle
         self.vie = VIE  # Initialisation de la vie
         self.turret = Turret(x, y, angle, turret_image_path)
@@ -377,8 +341,8 @@ def main():
     running = True
     delta_time = 0
 
-    tank1 = Tank(100, HEIGHT // 2, 80, 80, color_P1, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P1.png', 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P1.png', Z_P1, S_P1, D_P1, Q_P1, E_P1, A_P1, 0)
-    tank2 = Tank(WIDTH - 100, HEIGHT // 2, 80, 80, color_P2, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P2.png', 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P2.png', Z_P2, S_P2, D_P2, Q_P2, E_P2, A_P2, 180)
+    tank1 = Tank(100, HEIGHT // 2, 80, 80, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P1.png', 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P1.png', Z_P1, S_P1, D_P1, Q_P1, E_P1, A_P1, 0)
+    tank2 = Tank(WIDTH - 100, HEIGHT // 2, 80, 80, 'Jeu de tank/assets/MainCharacters/Tank/tank_base_P2.png', 'Jeu de tank/assets/MainCharacters/Tank/tank_turret_P2.png', Z_P2, S_P2, D_P2, Q_P2, E_P2, A_P2, 180)
     tanks = [tank1, tank2]
     bullets = []
 
@@ -417,14 +381,12 @@ def main():
         else:
             window.fill(BLACK)
             if en_jeu:
-                delta_time = clock.get_time() / 15.0  # Temps écoulé en secondes
-
+                delta_time = clock.get_time() / 15.0  # Temps écoulé en seconde
                 for tank in tanks:
                     tank.move(delta_time)
                     if not tank.handle_bullets(tanks, delta_time, box):
                         running = False  # Si un tank meurt, arrêter la partie
-                        pygame.quit()
-                        sys.exit()
+                        main()
 
                     draw_health_bar(window, tank.rect.centerx - 25, tank.rect.centery + 50, tank.vie, VIE)
                     tank.draw(window)

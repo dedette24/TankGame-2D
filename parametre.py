@@ -17,10 +17,11 @@ RED = (255, 0, 0)
 WIDTH, HEIGHT = 800, 600
 FPS = 75  # Fixer le FPS à 100
 TANK_VEL = 4
+TANK_VEL_IA = 4
 ROTATION_VEL = 2.5
 TURRET_ROTATION_VEL = 3
 BULLET_VEL = 8
-FIRE_DELAY = 2000  # 2 seconde
+FIRE_DELAY = 1000  # 2 seconde
 VIE = 3
 
 # Configuration des touches pour chaque joueur

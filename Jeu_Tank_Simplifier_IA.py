@@ -289,7 +289,7 @@ def main():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if bouton_debut.collidepoint(event.pos):
-                    en_jeu = True
+                    en_jeu = False
                     menu_actif = False
                 elif quitter_bouton.collidepoint(event.pos):
                     pygame.quit()

@@ -70,18 +70,12 @@ class Bullet:
         self.x = x
         self.y = y
         self.angle = angle
-<<<<<<< HEAD
         self.image = pygame.Surface((size, size), pygame.SRCALPHA)
         self.image.fill(color)
         self.rect = self.image.get_rect(center=(x, y))
-=======
-        self.speed = BULLET_VEL
-        self.owner = owner
->>>>>>> a254b830b9b8691cfa05dcebc9a4af9656bc6ebb
 
     def shoot(self, delta_time):
         radians = math.radians(self.angle)
-<<<<<<< HEAD
         self.x += BULLET_VEL * math.cos(radians) * delta_time
         self.y -= BULLET_VEL * math.sin(radians) * delta_time
         self.rect.center = (self.x, self.y)
@@ -89,16 +83,6 @@ class Bullet:
     def draw(self, window):
         window.blit(self.image, self.rect.topleft)
 
-=======
-        dx = self.speed * math.cos(radians)
-        dy = -self.speed * math.sin(radians)
-        self.rect.x += dx
-        self.rect.y += dy
-
-        # Vérifier si la balle quitte l'écran
-        if not (0 <= self.rect.x <= WIDTH and 0 <= self.rect.y <= HEIGHT):
-            self.kill()
->>>>>>> a254b830b9b8691cfa05dcebc9a4af9656bc6ebb
 
 class Base(pygame.sprite.Sprite):
     def __init__(self, x, y, orientation):
@@ -108,16 +92,10 @@ class Base(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(x, y))
         self.angle = orientation
         self.x, self.y = x, y
-<<<<<<< HEAD
         self.tourelle = Tourelle(self, self.angle)  # Créer la tourelle ici, attachée à cette base
         self.bullets = []
         self.last_shot_time = 0
 
-=======
-        self.tourelle = Tourelle(self, self.angle)
-        self.last_shot_time = 0
-        self.health = VIE  # Initialisation de la vie
->>>>>>> a254b830b9b8691cfa05dcebc9a4af9656bc6ebb
 
     def move(self, keys, objects, touche):
         if keys[touche[1]]:
@@ -188,20 +166,6 @@ class Base(pygame.sprite.Sprite):
                         new_y += dy
 
         return new_x, new_y
-<<<<<<< HEAD
-=======
-    
-    def fire(self, bullets):
-        now = pygame.time.get_ticks()
-        if now - self.last_shot_time >= FIRE_DELAY:
-            radians = math.radians(self.tourelle.angle)
-            barrel_length = 60
-            bullet_x = self.x + barrel_length * math.cos(radians)
-            bullet_y = self.y - barrel_length * math.sin(radians)
-            bullet = Bullet(bullet_x, bullet_y, self.tourelle.angle, self)
-            bullets.add(bullet)
-            self.last_shot_time = now
->>>>>>> a254b830b9b8691cfa05dcebc9a4af9656bc6ebb
 
     def fire(self):
         current_time = pygame.time.get_ticks()
@@ -282,11 +246,7 @@ class Box(pygame.sprite.Sprite):
 
 base1 = Base(100, 100, 0)
 curseur = Curseur()
-<<<<<<< HEAD
 box = Box(WIDTH / 2, HEIGHT / 2, 200, 200)
-=======
-box = Box(WIDTH /2 , HEIGHT / 2, 200, 200)
->>>>>>> a254b830b9b8691cfa05dcebc9a4af9656bc6ebb
 #box2 = Box(300, 300, 200, 20)
 base2 = Base(1100, 800, 180)
 
@@ -306,87 +266,31 @@ object_group.add(box)
 
 def main(window, clock):
     run = True
-<<<<<<< HEAD
     delta_time = 0
     while run:
         delta_time = clock.get_time() / 15.0  # Temps écoulé en secondes
         # Mise à jour du fond
-=======
-    base1 = Base(100, 100, 0)
-    base2 = Base(1100, 800, 180)
-    curseur = Curseur()
-    box = Box(WIDTH /2 , HEIGHT / 2, 200, 200)
-    bullets = pygame.sprite.Group()
-    base_group = pygame.sprite.Group()
-    object_group = pygame.sprite.Group()
-    base_group.add(base1)
-    base_group.add(base2)
-    object_group.add(box)
-
-    while run:
->>>>>>> a254b830b9b8691cfa05dcebc9a4af9656bc6ebb
         window.fill(BLACK)
         
         keys = pygame.key.get_pressed()
         base1.move(keys, object_group, TOUCHE1)
         base2.move(keys, object_group, TOUCHE2)
         
-<<<<<<< HEAD
         # Mise à jour des groupes
-        curseur_group.update(col_curseur)
-        object_group.update(col_box)
+        curseur_group.update(RED)
+        object_group.update(BLUE)
         
         # Dessin des groupes sur la fenêtre
-=======
-        if keys[pygame.K_SPACE]:
-            base1.fire(bullets)
-        if keys[pygame.K_RETURN]:
-            base2.fire(bullets)
-        
-        bullets.update()
-        
-        # Collision entre le curseur (balle) et la base
-        """if pygame.sprite.spritecollide(curseur, base_group, False):
-            col_curseur = BLUE
-            if pygame.sprite.spritecollide(curseur, base_group, False, pygame.sprite.collide_mask):  # Collision pixel-perfect
-                col_curseur = RED
-                """
-        
-        # Collision entre la base et les objets
-        for objects in object_group:
-            if pygame.sprite.spritecollide(objects, base_group, False):
-                if pygame.sprite.spritecollide(objects, base_group, False, pygame.sprite.collide_mask):
-                    objects.check_collision(base_group)
-        
-        for bullet in bullets:
-            for tank in base_group:
-                if bullet.owner != tank and bullet.rect.colliderect(tank.rect):
-                    tank.health -= 1
-                    if tank.health <= 0:
-                        tank.kill()
-                        base_group.remove(tank)
-                        
-                    bullet.kill()
-                    break
-            for box in object_group:
-                if bullet.rect.colliderect(box.rect):
-                    bullet.kill()
-                    break
-        
->>>>>>> a254b830b9b8691cfa05dcebc9a4af9656bc6ebb
         base1.draw(window)
         base2.draw(window)
-        bullets.draw(window)
+        #bullets.draw(window)
         object_group.draw(window)
         
-<<<<<<< HEAD
         pygame.draw.rect(window, RED, base1.rect, 2)  # Pour visualiser la base1
         pygame.draw.rect(window, RED, base2.rect, 2)  # Pour visualiser la base2
         #pygame.draw.rect(window, GREEN, box.rect, 12)  # Pour visualiser la boîte
         
         # Mise à jour de l'affichage
-=======
->>>>>>> a254b830b9b8691cfa05dcebc9a4af9656bc6ebb
         pygame.display.flip()
         
         for event in pygame.event.get():

@@ -9,7 +9,7 @@ class Boite:
         self.image = pygame.transform.scale(self.image, (size, size))
         print(f"{self.image}")
         self.rect = self.image.get_rect()  # Create a separate rect for collision detection
-        self.rect = pygame.draw.rect(window , RED, self.rect)
+        #self.rect = pygame.draw.rect(window , RED, self.rect)
         print(f"{self.rect}")
         self.rect.topleft = (random.randint(200, WIDTH - 200 - self.rect.width), random.randint(200, HEIGHT - 200 - self.rect.height))
         self.x = self.rect.x
@@ -17,7 +17,7 @@ class Boite:
 
     def draw(self, window):
         window.blit(self.image, self.rect.topleft)
-        pygame.draw.rect(window, RED, self.rect)
+        #pygame.draw.rect(window, RED, self.rect)
 
     def update_rect(self):
         self.rect.x = self.x

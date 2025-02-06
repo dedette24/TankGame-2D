@@ -1,8 +1,8 @@
 import numpy as np
 import random
 import pygame
-from parametre import *
-from menu import menu_principal
+from MEU.parametre import *
+from MEU.menu import menu_principal
 
 # Définir les actions possibles : avancer, reculer, tourner à gauche, tourner à droite, tourner la tourelle, tirer
 ACTIONS = ['UP', 'DOWN', 'LEFT', 'RIGHT', 'TURRET_LEFT', 'TURRET_RIGHT', 'FIRE']

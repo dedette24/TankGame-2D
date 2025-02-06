@@ -1,5 +1,5 @@
-from parametre import *
-from menu import menu_principal
+from MEU.parametre import *
+from MEU.menu import menu_principal
    
 class Boite:
     def __init__(self, size):
@@ -273,46 +273,9 @@ class TankIA(Tank):
     
     def decide_action(self, tanks, box):
         """
-        Détermine quelle action l'IA doit effectuer.
-        Simplement, elle se déplace vers le tank adverse.
+        a faire
         """
-        target_tank = tanks[0]  # Suppose que le joueur humain est le premier tank
-        target_x, target_y = target_tank.x, target_tank.y
         
-        # Calcul de la distance entre l'IA et le tank joueur
-        dx = target_x - self.x
-        dy = target_y - self.y
-        angle_to_target = math.degrees(math.atan2(-dy, dx)) % 360
-        
-        # Rotation de la base du tank
-        if abs(self.angle - angle_to_target) > 10:
-            if self.angle < angle_to_target:
-                self.angle += ROTATION_VEL
-            else:
-                self.angle -= ROTATION_VEL
-        else:
-            self.angle = angle_to_target
-        
-        # Déplacement du tank IA vers le joueur
-        if abs(dx) > 50 or abs(dy) > 50:  # Ne pas se déplacer trop près du joueur
-            radians = math.radians(self.angle)
-            new_x = self.x + TANK_VEL_IA * math.cos(radians)
-            new_y = self.y - TANK_VEL_IA * math.sin(radians)
-            self.collision_realiste(new_x, new_y, box)
-
-        # Rotation de la tourelle vers le joueur
-        turret_angle_to_target = math.degrees(math.atan2(-dy, dx)) % 360
-        if abs(self.turret.angle - turret_angle_to_target) > 10:
-            if self.turret.angle < turret_angle_to_target:
-                self.turret.angle += TURRET_ROTATION_VEL
-            else:
-                self.turret.angle -= TURRET_ROTATION_VEL
-        else:
-            self.turret.angle = turret_angle_to_target
-
-        # Si l'IA est alignée avec le joueur, tirer
-        if abs(self.turret.angle - turret_angle_to_target) < 1:
-            self.fire()
 
     
 def main():

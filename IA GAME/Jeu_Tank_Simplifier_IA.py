@@ -1,5 +1,5 @@
-from parametre import *
-from menu import menu_principal
+from MEU.parametre import *
+from MEU.menu import menu_principal
    
 class Boite:
     def __init__(self, size):

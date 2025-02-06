@@ -1,4 +1,4 @@
-from parametre import *
+from MEU.parametre import *
 
 def decompte(window, duration=3):
     for i in range(duration, 0, -1):
